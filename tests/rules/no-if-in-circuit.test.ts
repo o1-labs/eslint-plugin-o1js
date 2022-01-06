@@ -7,11 +7,11 @@ ruleTester.run('no-if-in-circuit', rule, {
   valid: [
     {
       code: `
-			class Foo {
-				async bar() {
-					if(true) {};
-				}
-			}`,
+    	class Foo {
+    		async bar() {
+    			if(true) {};
+    		}
+    	}`,
     },
     {
       code: `
@@ -47,6 +47,18 @@ ruleTester.run('no-if-in-circuit', rule, {
     			testIf();
     		}
     	}`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+    	let testIf = () => { if (true); };
+      function indirectIf() { testIf(); }
+    	class Foo {
+    		@method async myMethod() {
+    			indirectIf();
+    		}
+    	}
+      `,
       errors: [{ messageId: message }],
     },
   ],

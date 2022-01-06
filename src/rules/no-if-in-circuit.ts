@@ -1,15 +1,10 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/experimental-utils'
 import { simpleTraverse } from '@typescript-eslint/typescript-estree'
-import {
-  getFunctionName,
-  getSpecifiedDecorator,
-  crawlUpAST,
-  getDecorators,
-} from '../utils/ast-utils'
+import { getFunctionName } from '../utils/ast-utils'
 import {
   isCallExpression,
   isIdentifier,
-  isProgramStatement,
+  isIfStatement,
 } from '../utils/node-utils'
 import { CIRCUIT_METHOD_DECORATOR } from '../utils/selectors'
 
@@ -31,16 +26,26 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   create(context) {
     let snarkyCircuitMap = new Map<string, TSESTree.Node>()
     let ifSet = new Set<string>()
+    let callees: Record<string, string[]> = {}
+    let callStack: (string | undefined)[] = []
+    let currentFunction = () => callStack[callStack.length - 1]
+
+    function callsIf(functionName: string) {
+      return ifSet.has(functionName) || !!callees[functionName]?.some(callsIf)
+    }
 
     return {
       'Program:exit': function (_node) {
         for (let circuitNode of snarkyCircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
+              if (isIfStatement(node)) {
+                context.report({ messageId: 'noIfInCircuit', loc: node.loc })
+              }
               if (
                 isCallExpression(node) &&
                 isIdentifier(node.callee) &&
-                ifSet.has(node.callee.name)
+                callsIf(node.callee.name)
               ) {
                 context.report({
                   messageId: `noIfInCircuit`,
@@ -62,26 +67,23 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         }
       },
 
-      IfStatement(ifNode: TSESTree.Node) {
-        crawlUpAST(ifNode, (currentNode) => {
-          const decorators = getDecorators(currentNode)
-          const methodDecorator = getSpecifiedDecorator(decorators, 'method')
-          const functionName = getFunctionName(currentNode)
-
-          if (methodDecorator) {
-            context.report({
-              messageId: `noIfInCircuit`,
-              loc: currentNode.loc,
-            })
-            return 'Stop'
-          } else if (functionName) {
-            ifSet.add(functionName)
-            return 'Stop'
-          } else if (isProgramStatement(currentNode)) {
-            return 'Stop'
-          }
-          return 'Continue'
-        })
+      ':function'(node: TSESTree.Node) {
+        callStack.push(getFunctionName(node))
+      },
+      ':function:exit'() {
+        callStack.pop()
+      },
+      IfStatement() {
+        let functionName = currentFunction()
+        if (functionName) ifSet.add(functionName)
+      },
+      CallExpression(node: TSESTree.CallExpression) {
+        let functionName = currentFunction()
+        if (functionName && isIdentifier(node.callee)) {
+          let currentCallees =
+            callees[functionName] || (callees[functionName] = [])
+          currentCallees.push(node.callee.name)
+        }
       },
     }
   },

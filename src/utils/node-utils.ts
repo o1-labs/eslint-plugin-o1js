@@ -50,6 +50,12 @@ export function isConditionalExpression(
   return node !== undefined && node.type === 'ConditionalExpression'
 }
 
+export function isIfStatement(
+  node: TSESTree.Node | undefined
+): node is TSESTree.IfStatement {
+  return node !== undefined && node.type === 'IfStatement'
+}
+
 export function isClassDeclaration(
   node: TSESTree.Node | undefined
 ): node is TSESTree.ClassDeclaration {
