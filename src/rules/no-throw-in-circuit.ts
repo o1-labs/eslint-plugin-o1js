@@ -1,15 +1,10 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/experimental-utils'
 import { simpleTraverse } from '@typescript-eslint/typescript-estree'
-import {
-  getDecorators,
-  getFunctionName,
-  getSpecifiedDecorator,
-  crawlUpAST,
-} from '../utils/ast-utils'
+import { getFunctionName } from '../utils/ast-utils'
 import {
   isCallExpression,
   isIdentifier,
-  isProgramStatement,
+  isThrowStatement,
 } from '../utils/node-utils'
 import { CIRCUIT_METHOD_DECORATOR } from '../utils/selectors'
 
@@ -29,16 +24,28 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   create(context) {
     let snarkyCircuitMap = new Map<string, TSESTree.Node>()
     let throwSet = new Set<string>()
+    let callees: Record<string, string[]> = {}
+    let callStack: (string | undefined)[] = []
+    let currentFunction = () => callStack[callStack.length - 1]
+
+    function callsThrow(functionName: string) {
+      return (
+        throwSet.has(functionName) || !!callees[functionName]?.some(callsThrow)
+      )
+    }
 
     return {
       'Program:exit': function (_) {
         for (let circuitNode of snarkyCircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
+              if (isThrowStatement(node)) {
+                context.report({ messageId: 'noThrowInCircuit', loc: node.loc })
+              }
               if (
                 isCallExpression(node) &&
                 isIdentifier(node.callee) &&
-                throwSet.has(node.callee.name)
+                callsThrow(node.callee.name)
               ) {
                 context.report({
                   messageId: `noThrowInCircuit`,
@@ -60,26 +67,26 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         }
       },
 
-      ThrowStatement(throwNode: TSESTree.Node) {
-        crawlUpAST(throwNode, (currentNode) => {
-          const decorators = getDecorators(currentNode)
-          const methodDecorator = getSpecifiedDecorator(decorators, 'method')
-          const functionName = getFunctionName(currentNode)
+      ':function'(node: TSESTree.Node) {
+        callStack.push(getFunctionName(node))
+      },
 
-          if (methodDecorator) {
-            context.report({
-              messageId: `noThrowInCircuit`,
-              loc: throwNode.loc,
-            })
-            return 'Stop'
-          } else if (functionName) {
-            throwSet.add(functionName)
-            return 'Stop'
-          } else if (isProgramStatement(currentNode)) {
-            return 'Stop'
-          }
-          return 'Continue'
-        })
+      ':function:exit'() {
+        callStack.pop()
+      },
+
+      ThrowStatement() {
+        let functionName = currentFunction()
+        if (functionName) throwSet.add(functionName)
+      },
+
+      CallExpression(node: TSESTree.CallExpression) {
+        let functionName = currentFunction()
+        if (functionName && isIdentifier(node.callee)) {
+          let currentCallees =
+            callees[functionName] || (callees[functionName] = [])
+          currentCallees.push(node.callee.name)
+        }
       },
     }
   },

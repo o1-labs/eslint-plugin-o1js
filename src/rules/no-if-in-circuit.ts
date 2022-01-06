@@ -70,13 +70,16 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       ':function'(node: TSESTree.Node) {
         callStack.push(getFunctionName(node))
       },
+
       ':function:exit'() {
         callStack.pop()
       },
+
       IfStatement() {
         let functionName = currentFunction()
         if (functionName) ifSet.add(functionName)
       },
+
       CallExpression(node: TSESTree.CallExpression) {
         let functionName = currentFunction()
         if (functionName && isIdentifier(node.callee)) {

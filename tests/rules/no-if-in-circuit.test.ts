@@ -7,20 +7,20 @@ ruleTester.run('no-if-in-circuit', rule, {
   valid: [
     {
       code: `
-    	class Foo {
-    		async bar() {
-    			if(true) {};
-    		}
-    	}`,
+      class Foo {
+        async bar() {
+          if(true) {};
+        }
+      }`,
     },
     {
       code: `
-    	function testIf() { if (true) {}; };
-    	class Foo {
-    		async bar() {
-    			testIf();
-    		}
-    	}`,
+      function testIf() { if (true) {}; };
+      class Foo {
+        async bar() {
+          testIf();
+        }
+      }`,
     },
     {
       code: `
@@ -32,32 +32,32 @@ ruleTester.run('no-if-in-circuit', rule, {
   invalid: [
     {
       code: `
-    	class Foo {
-    		@method async bar() {
-    			if (true) {};
-    		}
-    	}`,
+      class Foo {
+     	  @method async bar() {
+          if (true) {};
+        }
+      }`,
       errors: [{ messageId: message }],
     },
     {
       code: `
-    	function testIf() { if (true) {}; };
-    	class Foo {
-    		@method async bar() {
-    			testIf();
-    		}
-    	}`,
+      function testIf() { if (true) {}; };
+      class Foo {
+        @method async bar() {
+         testIf();
+        }
+      }`,
       errors: [{ messageId: message }],
     },
     {
       code: `
-    	let testIf = () => { if (true); };
+      let testIf = () => { if (true); };
       function indirectIf() { testIf(); }
-    	class Foo {
-    		@method async myMethod() {
-    			indirectIf();
-    		}
-    	}
+      class Foo {
+        @method async myMethod() {
+          indirectIf();
+        }
+      }
       `,
       errors: [{ messageId: message }],
     },

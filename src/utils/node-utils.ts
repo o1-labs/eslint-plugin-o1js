@@ -56,6 +56,12 @@ export function isIfStatement(
   return node !== undefined && node.type === 'IfStatement'
 }
 
+export function isThrowStatement(
+  node: TSESTree.Node | undefined
+): node is TSESTree.ThrowStatement {
+  return node !== undefined && node.type === 'ThrowStatement'
+}
+
 export function isClassDeclaration(
   node: TSESTree.Node | undefined
 ): node is TSESTree.ClassDeclaration {

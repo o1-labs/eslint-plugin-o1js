@@ -7,20 +7,20 @@ ruleTester.run('no-throw-in-circuit', rule, {
   valid: [
     {
       code: `
-			class Foo {
-				async bar() {
-					throw "foobar";
-				}
-			}`,
+	    class Foo {
+        async bar() {
+          throw "foobar";
+        }
+      }`,
     },
     {
       code: `
-    	function testThrow() { throw "test" };
-    	class Foo {
-    		async bar() {
-    			testThrow();
-    		}
-    	}`,
+      function testThrow() { throw "test" };
+      class Foo {
+        async bar() {
+          testThrow();
+        }
+      }`,
     },
     {
       code: `
@@ -32,21 +32,33 @@ ruleTester.run('no-throw-in-circuit', rule, {
   invalid: [
     {
       code: `
-    	class Foo {
-    		@method async bar() {
-    			throw "foobar";
-    		}
-    	}`,
+      class Foo {
+        @method async bar() {
+          throw "foobar";
+        }
+      }`,
       errors: [{ messageId: message }],
     },
     {
       code: `
-    	function testThrow() { throw "test" };
-    	class Foo {
-    		@method async bar() {
-    			testThrow();
-    		}
-    	}`,
+      function testThrow() { throw "test" };
+      class Foo {
+        @method async bar() {
+          testThrow();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testThrow = () => { throw "test"; };
+      function indirectThrow() { testThrow(); }
+      class Foo {
+        @method async myMethod() {
+          indirectThrow();
+        }
+      }
+      `,
       errors: [{ messageId: message }],
     },
   ],

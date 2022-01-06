@@ -49,5 +49,17 @@ ruleTester.run('no-ternary-in-circuit', rule, {
     	}`,
       errors: [{ messageId: message }],
     },
+    {
+      code: `
+    	let testTernary = () => { true ? true : false; };
+      function indirectTernary() { testTernary(); }
+    	class Foo {
+    		@method async myMethod() {
+    			indirectTernary();
+    		}
+    	}
+      `,
+      errors: [{ messageId: message }],
+    },
   ],
 })
