@@ -7,20 +7,20 @@ ruleTester.run('no-ternary-in-circuit', rule, {
   valid: [
     {
       code: `
-			class Foo {
-				async bar() {
+      class Foo {
+        async bar() {
           let a = true ? true : false;
-				}
-			}`,
+        }
+      }`,
     },
     {
       code: `
-    	function testTernary() { let a = true ? true : false; };
-    	class Foo {
-    		async bar() {
-    			testTernary();
-    		}
-    	}`,
+      function testTernary() { let a = true ? true : false; };
+      class Foo {
+        async bar() {
+          testTernary();
+        }
+      }`,
     },
     {
       code: `
@@ -32,32 +32,32 @@ ruleTester.run('no-ternary-in-circuit', rule, {
   invalid: [
     {
       code: `
-    	class Foo {
-    		@method async bar() {
+      class Foo {
+        @method async bar() {
           let a = true ? true : false;
-    		}
+        }
     	}`,
       errors: [{ messageId: message }],
     },
     {
       code: `
-    	function testTernary() { let a = true ? true : false; };
-    	class Foo {
-    		@method async bar() {
-    			testTernary();
-    		}
+      function testTernary() { let a = true ? true : false; };
+      class Foo {
+        @method async bar() {
+          testTernary();
+        }
     	}`,
       errors: [{ messageId: message }],
     },
     {
       code: `
-    	let testTernary = () => { true ? true : false; };
+      let testTernary = () => { true ? true : false; };
       function indirectTernary() { testTernary(); }
-    	class Foo {
-    		@method async myMethod() {
-    			indirectTernary();
-    		}
-    	}
+      class Foo {
+        @method async myMethod() {
+          indirectTernary();
+        }
+      }
       `,
       errors: [{ messageId: message }],
     },
