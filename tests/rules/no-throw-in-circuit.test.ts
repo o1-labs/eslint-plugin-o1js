@@ -7,7 +7,7 @@ ruleTester.run('no-throw-in-circuit', rule, {
   valid: [
     {
       code: `
-	    class Foo {
+      class Foo {
         async bar() {
           throw "foobar";
         }

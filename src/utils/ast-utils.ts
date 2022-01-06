@@ -7,7 +7,6 @@ import {
   isMethodDefinition,
   isVariableDeclarator,
   isArrowFunctionExpression,
-  isClassDeclaration,
   isPropertyDefinition,
   isCallExpression,
   isTSTypeReference,
@@ -108,23 +107,4 @@ export function getFunctionName(node: TSESTree.Node) {
     }
   }
   return undefined
-}
-
-export function getClassName(node: TSESTree.Node) {
-  if (isClassDeclaration(node)) {
-    return node.id?.name
-  }
-  return undefined
-}
-
-export type CrawlStatus = 'Continue' | 'Stop'
-export function crawlUpAST(
-  startingNode: TSESTree.Node,
-  fn: (currentNode: TSESTree.Node) => CrawlStatus
-) {
-  let currentNode = startingNode.parent
-  while (currentNode) {
-    if (fn(currentNode) === 'Stop') break
-    currentNode = currentNode.parent
-  }
 }
