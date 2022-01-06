@@ -15,17 +15,34 @@ import {
 
 const MAX_CONTRACT_STATES = 8
 
-const SnarkyJSPrimitive = [
+const SnarkyJSPrimitiveNames = [
   'Field',
   'Bool',
-  'Circuit',
-  'Poseidon',
-  'Group',
+  'UInt32',
+  'Uint64',
   'Scalar',
+  'PrivateKey',
+  'Group',
+  'PublicKey',
+  'Signature',
 ] as const
-type SnarkyJSPrimitive = typeof SnarkyJSPrimitive[number]
-const isSnarkyJSPrimitive = (p: any): p is SnarkyJSPrimitive =>
-  SnarkyJSPrimitive.includes(p)
+
+type SnarkyJSPrimitiveName = typeof SnarkyJSPrimitiveNames[number]
+
+const isSnarkyJSPrimitive = (p: any): p is SnarkyJSPrimitiveName =>
+  SnarkyJSPrimitiveNames.includes(p)
+
+const SnarkyJSPrimitiveInfo = {
+  Field: { size: 1 },
+  Bool: { size: 1 },
+  Scalar: { size: 1 },
+  UInt32: { size: 1 },
+  Uint64: { size: 1 },
+  PrivateKey: { size: 1 },
+  Group: { size: 2 },
+  PublicKey: { size: 2 },
+  Signature: { size: 2 },
+} as Record<SnarkyJSPrimitiveName, { size: number }>
 
 type CircuitDecoratorInfo = {
   decoratorType: string
@@ -46,7 +63,6 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       recommended: 'error',
       url: '',
     },
-    fixable: 'code',
   },
 
   create(context) {
@@ -68,7 +84,11 @@ const rule: TSESLint.RuleModule<string, string[]> = {
                 }
               }
             } else if (isSnarkyJSPrimitive(circuitDecorator.decoratorType)) {
-              stateCount++
+              const stateSize =
+                SnarkyJSPrimitiveInfo[
+                  circuitDecorator.decoratorType as SnarkyJSPrimitiveName
+                ].size
+              stateCount += stateSize
             }
             if (stateCount > MAX_CONTRACT_STATES) {
               context.report({
@@ -124,10 +144,14 @@ const rule: TSESLint.RuleModule<string, string[]> = {
                 const decoratorType =
                   getDecoratorType(propDecorator) || getPropertyType(node)
                 if (decoratorType) {
+                  const size =
+                    SnarkyJSPrimitiveInfo[
+                      decoratorType as SnarkyJSPrimitiveName
+                    ].size
                   circuitStates.push({
                     decoratorType,
                     kind: 'prop',
-                    size: 1,
+                    size,
                     node: parent,
                   })
                 }
@@ -135,10 +159,14 @@ const rule: TSESLint.RuleModule<string, string[]> = {
                 const decoratorType =
                   getDecoratorType(arrayPropDecorator) || getPropertyType(node)
                 if (decoratorType) {
+                  const size =
+                    SnarkyJSPrimitiveInfo[
+                      decoratorType as SnarkyJSPrimitiveName
+                    ].size
                   circuitStates.push({
                     decoratorType,
                     kind: 'arrayProp',
-                    size: getDecoratorTypeSize(arrayPropDecorator)!,
+                    size: getDecoratorTypeSize(arrayPropDecorator)! * size,
                     node: parent,
                   })
                 }
