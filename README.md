@@ -39,11 +39,11 @@ Add `eslint-plugin-snarkyjs` to the `plugins` option in your eslint config:
 
 ```
 {
-	"rules": {
-		"snarkyjs/no-greater-storage-limit-in-circuit": "error",
-		"snarkyjs/no-throw-in-circuit": "error"
-		...
-	}
+  "rules": {
+    "snarkyjs/no-greater-storage-limit-in-circuit": "error",
+    "snarkyjs/no-throw-in-circuit": "error"
+    ...
+  }
 }
 ```
 
