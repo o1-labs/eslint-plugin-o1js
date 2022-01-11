@@ -19,7 +19,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
     docs: {
       description:
         'A "ternary" statement should not be used in a circuit. Please use "Circuit.if" instead.',
-      recommended: 'error',
+      recommended: 'warn',
     },
   },
 
