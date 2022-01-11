@@ -5,6 +5,7 @@ const snarkyJSRules: string[] = [
   'no-if-in-circuit',
   'no-ternary-in-circuit',
   'no-throw-in-circuit',
+  'no-json-functions-in-circuit',
 ]
 
 const snarkyJSRuleModules: { [key: string]: any } = {}

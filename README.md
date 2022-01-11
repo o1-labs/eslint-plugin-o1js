@@ -8,6 +8,7 @@ SnarkyJS rules for ESLint to detect bugs and invalid patterns in your Smart Cont
 - Throw statements should not be used in a Circuit method
 - If statements should not be used in a Circuit method
 - Ternary statements should not be used in a Circuit method
+- JavaScript JSON functions should not be used in a Circuit method
 
 # Installation
 
