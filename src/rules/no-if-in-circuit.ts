@@ -58,13 +58,10 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       },
 
       [CIRCUIT_METHOD_DECORATOR]: function (
-        circuitMethodNode: TSESTree.Decorator
+        circuitMethodNode: TSESTree.MethodDefinition
       ) {
-        if (circuitMethodNode.parent) {
-          const functionName = getFunctionName(circuitMethodNode.parent)
-          if (functionName)
-            snarkyCircuitMap.set(functionName, circuitMethodNode.parent)
-        }
+        const functionName = getFunctionName(circuitMethodNode)
+        if (functionName) snarkyCircuitMap.set(functionName, circuitMethodNode)
       },
 
       ':function'(node: TSESTree.Node) {

@@ -37,6 +37,15 @@ ruleTester.run('no-json-functions-in-circuit', rule, {
         }
       }`,
     },
+    {
+      code: `
+      function testJSON() { JSON.parse(a); };
+      class Foo {
+        async bar() {
+          testJSON();
+        }
+      }`,
+    },
   ],
   invalid: [
     {
@@ -71,6 +80,60 @@ ruleTester.run('no-json-functions-in-circuit', rule, {
       class Foo {
         @method async bar() {
           JSON.parse(a)
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      function testJSON() { JSON.parse(a); };
+      class Foo {
+        @method async bar() {
+          testJSON();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testJSON = () => { JSON.parse(a); };
+      function indirectJSON() { testJSON(); };
+      class Foo {
+        @method async bar() {
+          indirectJSON();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testJSON = () => { JSON.stringify(a); };
+      function indirectJSON() { testJSON(); };
+      class Foo {
+        @method async bar() {
+          indirectJSON();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testJSON = () => { let t = JSON.parse(a); };
+      function indirectJSON() { testJSON(); };
+      class Foo {
+        @method async bar() {
+          indirectJSON();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testJSON = () => { let t = JSON.stringify(a); };
+      function indirectJSON() { testJSON(); };
+      class Foo {
+        @method async bar() {
+          indirectJSON();
         }
       }`,
       errors: [{ messageId: message }],

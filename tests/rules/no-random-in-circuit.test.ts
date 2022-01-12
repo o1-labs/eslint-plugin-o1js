@@ -75,5 +75,27 @@ ruleTester.run('no-random-in-circuit', rule, {
       }`,
       errors: [{ messageId: message }],
     },
+    {
+      code: `
+      let testRandom = () => { Math.random(); };
+      function indirectRandom () { testRandom(); };
+      class Foo {
+        @method async bar() {
+          indirectRandom();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testRandom = () => { let t = Math.random(); };
+      function indirectRandom() { testRandom(); };
+      class Foo {
+        @method async bar() {
+          indirectRandom();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
   ],
 })
