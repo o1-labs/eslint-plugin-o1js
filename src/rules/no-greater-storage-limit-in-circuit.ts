@@ -77,7 +77,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
             // Check if the state decorator is held within a CircuitValue otherwise check if it is a SnarkyJS primitive
             if (circuitValueMap.has(circuitDecorator.decoratorType)) {
               const circuitStates =
-                circuitValueMap.get(circuitDecorator.decoratorType) || []
+                circuitValueMap.get(circuitDecorator.decoratorType) ?? []
               for (let circuitState of circuitStates) {
                 if (circuitState.size) {
                   stateCount += circuitState.size
@@ -111,7 +111,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
             const stateDecorator = getSpecifiedDecorator(decorators, 'state')
             if (stateDecorator) {
               const decoratorType =
-                getDecoratorType(stateDecorator) || getPropertyType(node)
+                getDecoratorType(stateDecorator) ?? getPropertyType(node)
               if (decoratorType) {
                 circuitStates.push({
                   decoratorType,
@@ -141,7 +141,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
             )
             if (propDecorator) {
               const decoratorType =
-                getDecoratorType(propDecorator) || getPropertyType(node)
+                getDecoratorType(propDecorator) ?? getPropertyType(node)
               if (decoratorType) {
                 const size =
                   SnarkyJSPrimitiveInfo[decoratorType as SnarkyJSPrimitiveName]
@@ -155,7 +155,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
               }
             } else if (arrayPropDecorator) {
               const decoratorType =
-                getDecoratorType(arrayPropDecorator) || getPropertyType(node)
+                getDecoratorType(arrayPropDecorator) ?? getPropertyType(node)
               if (decoratorType) {
                 const size =
                   SnarkyJSPrimitiveInfo[decoratorType as SnarkyJSPrimitiveName]

@@ -5,13 +5,13 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   meta: {
     messages: {
       noConstructorInSmartContract:
-        'Overriding the constructor in a circuit is disallowed in snarkyjs. Please remove the constructor.',
+        'Overriding the constructor of a SmartContract is disallowed. Please remove the constructor.',
     },
     schema: [],
     type: 'problem',
     docs: {
       description:
-        'Overriding the constructor in a circuit is disallowed in snarkyjs. Please remove the constructor.',
+        'Overriding the constructor of a SmartContract is disallowed. Please remove the constructor.',
       recommended: 'error',
     },
   },

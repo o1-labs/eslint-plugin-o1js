@@ -37,6 +37,22 @@ ruleTester.run('no-random-in-circuit', rule, {
         }
       }`,
     },
+    {
+      code: `
+      class Foo {
+        async bar() {
+          crypto.getRandomValues(arr)
+        }
+      }`,
+    },
+    {
+      code: `
+      class Foo {
+        async bar() {
+          getRandomValues(arr);
+        }
+      }`,
+    },
   ],
   invalid: [
     {
@@ -89,6 +105,46 @@ ruleTester.run('no-random-in-circuit', rule, {
     {
       code: `
       let testRandom = () => { let t = Math.random(); };
+      function indirectRandom() { testRandom(); };
+      class Foo {
+        @method async bar() {
+          indirectRandom();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      class Foo {
+        @method async bar() {
+          crypto.getRandomValues(arr);
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      class Foo {
+        @method async bar() {
+          getRandomValues(arr);
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testRandom = () => { crypto.getRandomValues(arr); };
+      function indirectRandom() { testRandom(); };
+      class Foo {
+        @method async bar() {
+          indirectRandom();
+        }
+      }`,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      let testRandom = () => { getRandomValues(arr); };
       function indirectRandom() { testRandom(); };
       class Foo {
         @method async bar() {

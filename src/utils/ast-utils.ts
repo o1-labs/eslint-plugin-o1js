@@ -11,6 +11,7 @@ import {
   isCallExpression,
   isTSTypeReference,
   isTSArrayType,
+  isMemberExpression,
 } from './node-utils'
 
 export function getDecorators(
@@ -107,4 +108,26 @@ export function getFunctionName(node: TSESTree.Node) {
     }
   }
   return undefined
+}
+export let isBanned = (
+  node: TSESTree.CallExpression,
+  bannedImports: Set<string>,
+  bannedFunctions: Set<string>
+) => {
+  if (isMemberExpression(node.callee)) {
+    if (
+      isIdentifier(node.callee.property) &&
+      isIdentifier(node.callee.object) &&
+      bannedImports.has(node.callee.object.name) &&
+      bannedFunctions.has(node.callee.property.name)
+    ) {
+      return true
+    }
+  } else if (
+    isIdentifier(node.callee) &&
+    bannedFunctions.has(node.callee.name)
+  ) {
+    return true
+  }
+  return false
 }
