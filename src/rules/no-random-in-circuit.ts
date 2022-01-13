@@ -1,7 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/experimental-utils'
 import { simpleTraverse } from '@typescript-eslint/typescript-estree'
 import { isIdentifier, isCallExpression } from '../utils/node-utils'
-import { getFunctionName, isBanned } from '../utils/ast-utils'
+import { getFunctionName, isBannedCallExpression } from '../utils/ast-utils'
 import { CIRCUIT_METHOD_DECORATOR } from '../utils/selectors'
 
 const rule: TSESLint.RuleModule<string, string[]> = {
@@ -46,7 +46,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
             enter: (node: TSESTree.Node) => {
               if (
                 isCallExpression(node) &&
-                isBanned(node, bannedImports, bannedFunctions)
+                isBannedCallExpression(node, bannedImports, bannedFunctions)
               ) {
                 context.report({
                   messageId: 'noRandomInCircuit',
@@ -85,7 +85,10 @@ const rule: TSESLint.RuleModule<string, string[]> = {
 
       CallExpression(node: TSESTree.CallExpression) {
         let functionName = currentFunction()
-        if (functionName && isBanned(node, bannedImports, bannedFunctions)) {
+        if (
+          functionName &&
+          isBannedCallExpression(node, bannedImports, bannedFunctions)
+        ) {
           randomSet.add(functionName)
         }
         if (functionName && isIdentifier(node.callee)) {

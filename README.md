@@ -10,7 +10,7 @@ SnarkyJS rules for ESLint to detect bugs and invalid patterns in your Smart Cont
 - Ternary statements should not be used in a Circuit method
 - JavaScript JSON functions should not be used in a Circuit method
 - JavaScript random functions should not be used in a Circuit method
-- Overriding the constructor in a circuit is disallowed in a SmartContract class
+- Overriding the constructor in a SmartContract is disallowed
 
 # Installation
 

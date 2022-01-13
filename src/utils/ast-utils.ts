@@ -14,9 +14,12 @@ import {
   isMemberExpression,
 } from './node-utils'
 
-export function getDecorators(
-  node: TSESTree.Node | undefined
-): TSESTree.Decorator[] {
+/**
+ * Returns all decorators of a node if they exist, otherwise returns an empty list.
+ * @param  node Node to get decorators from
+ * @returns A list of decorators or an empty list
+ */
+export function getDecorators(node: TSESTree.Node): TSESTree.Decorator[] {
   if (
     (isMethodDefinition(node) || isPropertyDefinition(node)) &&
     node.decorators
@@ -26,16 +29,22 @@ export function getDecorators(
   return []
 }
 
+/**
+ * For a given list of decorators, find a decorator by name. Returns `undefined` if not found.
+ * @param decorators A list of decorators to search
+ * @param decoratorToFind The name of the decorator to find
+ * @returns The specified decorator or undefined
+ */
 export function getSpecifiedDecorator(
   decorators: TSESTree.Decorator[],
   decoratorToFind: string
 ) {
   return decorators.find((decorator) => {
-    // Check if @prop decorator
+    // Check if we hit a decorator with no call expression (e.g. `@prop`)
     if (isIdentifier(decorator.expression)) {
       return decorator.expression.name === decoratorToFind
     }
-    // Check if @propArray<type, size> decorator
+    // Check if we hit a decorator with a call expression (e.g. `@state(T)`)
     else if (
       isCallExpression(decorator.expression) &&
       isIdentifier(decorator.expression.callee)
@@ -45,7 +54,13 @@ export function getSpecifiedDecorator(
   })
 }
 
-export function getDecoratorType(decorator: TSESTree.Decorator) {
+/**
+ * Gets the first value of a decorator expression if it has one, otherwiser returns `undefined`.
+ * For example, if called on `@state(T)`, it will return `T`.
+ * @param decorator The specified decorator
+ * @returns The first value of the decorator or undefined
+ */
+export function getFirstDecoratorValue(decorator: TSESTree.Decorator) {
   if (
     isCallExpression(decorator.expression) &&
     isIdentifier(decorator.expression.callee)
@@ -59,16 +74,20 @@ export function getDecoratorType(decorator: TSESTree.Decorator) {
   }
   return undefined
 }
-
-export function getDecoratorTypeSize(decorator: TSESTree.Decorator) {
+/**
+ * Gets the second value of a decorator expression if it has one, otherwise returns `undefined`.
+ * For example, if called on `@state(T, U)`, it will return `U`
+ * @param decorator The specified decorator
+ * @returns The second value of the decorator or undefined
+ */
+export function getSecondDecoratorValue(decorator: TSESTree.Decorator) {
   if (
     isCallExpression(decorator.expression) &&
     isIdentifier(decorator.expression.callee)
   ) {
     if (
       decorator.expression.arguments.length >= 2 &&
-      isLiteral(decorator.expression.arguments[1]) &&
-      typeof decorator.expression.arguments[1].value === 'number'
+      isLiteral(decorator.expression.arguments[1])
     ) {
       return decorator.expression.arguments[1].value
     }
@@ -76,6 +95,12 @@ export function getDecoratorTypeSize(decorator: TSESTree.Decorator) {
   return undefined
 }
 
+/**
+ * Gets the annotated type of a node if it has one. For example, if a node has the statement
+ * `node: T`, it will return `T`. Otherwise return undefined.
+ * @param node The specified node
+ * @returns The type annotation of the node or undefined
+ */
 export function getPropertyType(node: TSESTree.Node) {
   if (isPropertyDefinition(node) && node.typeAnnotation) {
     if (
@@ -95,6 +120,11 @@ export function getPropertyType(node: TSESTree.Node) {
   return undefined
 }
 
+/**
+ * Gets the function name of a node if it has one, otherwise return undefined.
+ * @param node The specified node
+ * @returns The function name or undefined
+ */
 export function getFunctionName(node: TSESTree.Node) {
   if (isFunctionDeclaration(node)) {
     return node.id?.name
@@ -109,7 +139,16 @@ export function getFunctionName(node: TSESTree.Node) {
   }
   return undefined
 }
-export let isBanned = (
+
+/**
+ * Checks to see if the specified `CallExpression` node uses a banned import or calls upon
+ * a banned function.
+ * @param node The specified `CallExpression` node
+ * @param bannedImports A set of banned imports
+ * @param bannedFunctions A set of banned functions
+ * @returns True if the `CallExpression` calls on a banned import or function or false
+ */
+export let isBannedCallExpression = (
   node: TSESTree.CallExpression,
   bannedImports: Set<string>,
   bannedFunctions: Set<string>
