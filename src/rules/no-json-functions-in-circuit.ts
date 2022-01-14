@@ -1,73 +1,66 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/experimental-utils'
 import { simpleTraverse } from '@typescript-eslint/typescript-estree'
-import { getFunctionName } from '../utils/ast-utils'
-import {
-  isCallExpression,
-  isIdentifier,
-  isConditionalExpression,
-} from '../utils/node-utils'
+import { isIdentifier, isCallExpression } from '../utils/node-utils'
+import { getFunctionName, isBannedCallExpression } from '../utils/ast-utils'
 import { CIRCUIT_METHOD_DECORATOR } from '../utils/selectors'
 
 const rule: TSESLint.RuleModule<string, string[]> = {
   meta: {
     messages: {
-      noTernaryInCircuit:
-        'A "ternary" statement should not be used in a circuit. Please use "Circuit.if" instead.',
+      noJSONFunctionInCircuit:
+        'JavaScript JSON function usage should be avoided in a circuit. The resulting values do not make it into the circuit.',
     },
     schema: [],
     type: 'suggestion',
     docs: {
       description:
-        'A "ternary" statement should not be used in a circuit. Please use "Circuit.if" instead.',
+        'JavaScript JSON function usage should be avoided in a circuit. The resulting values do not make it into the circuit.',
       recommended: 'warn',
     },
   },
 
   create(context) {
+    const bannedImports = new Set<string>(['JSON'])
+    const bannedFunctions = new Set<string>(['stringify', 'parse'])
     let snarkyCircuitMap = new Map<string, TSESTree.Node>()
-    let ternarySet = new Set<string>()
+    let jsonSet = new Set<string>()
     let callees: Record<string, string[]> = {}
     let callStack: (string | undefined)[] = []
     let currentFunction = () => callStack[callStack.length - 1]
 
-    function callsTernary(functionName: string) {
+    function callsJSON(functionName: string) {
       return (
-        ternarySet.has(functionName) ||
-        !!callees[functionName]?.some(callsTernary)
+        jsonSet.has(functionName) || !!callees[functionName]?.some(callsJSON)
       )
     }
 
     return {
-      'Program:exit': function (_node) {
+      'Program:exit': function (_) {
         for (let circuitNode of snarkyCircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
-              if (isConditionalExpression(node)) {
+              if (
+                isCallExpression(node) &&
+                isBannedCallExpression(node, bannedImports, bannedFunctions)
+              ) {
                 context.report({
-                  messageId: 'noTernaryInCircuit',
+                  messageId: 'noJSONFunctionInCircuit',
                   loc: node.loc,
                 })
               }
               if (
                 isCallExpression(node) &&
                 isIdentifier(node.callee) &&
-                callsTernary(node.callee.name)
+                callsJSON(node.callee.name)
               ) {
                 context.report({
-                  messageId: `noTernaryInCircuit`,
+                  messageId: `noJSONFunctionInCircuit`,
                   loc: node.loc,
                 })
               }
             },
           })
         }
-      },
-
-      [CIRCUIT_METHOD_DECORATOR]: function (
-        circuitMethodNode: TSESTree.MethodDefinition
-      ) {
-        const functionName = getFunctionName(circuitMethodNode)
-        if (functionName) snarkyCircuitMap.set(functionName, circuitMethodNode)
       },
 
       ':function'(node: TSESTree.Node) {
@@ -78,13 +71,21 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         callStack.pop()
       },
 
-      ConditionalExpression() {
-        let functionName = currentFunction()
-        if (functionName) ternarySet.add(functionName)
+      [CIRCUIT_METHOD_DECORATOR]: function (
+        circuitMethodNode: TSESTree.MethodDefinition
+      ) {
+        const functionName = getFunctionName(circuitMethodNode)
+        if (functionName) snarkyCircuitMap.set(functionName, circuitMethodNode)
       },
 
       CallExpression(node: TSESTree.CallExpression) {
         let functionName = currentFunction()
+        if (
+          functionName &&
+          isBannedCallExpression(node, bannedImports, bannedFunctions)
+        ) {
+          jsonSet.add(functionName)
+        }
         if (functionName && isIdentifier(node.callee)) {
           let currentCallees =
             callees[functionName] || (callees[functionName] = [])

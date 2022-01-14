@@ -44,6 +44,12 @@ export function isCallExpression(
   return node !== undefined && node.type === 'CallExpression'
 }
 
+export function isMemberExpression(
+  node: TSESTree.Node | undefined
+): node is TSESTree.MemberExpression {
+  return node !== undefined && node.type === 'MemberExpression'
+}
+
 export function isConditionalExpression(
   node: TSESTree.Node | undefined
 ): node is TSESTree.ConditionalExpression {

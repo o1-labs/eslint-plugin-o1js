@@ -3,10 +3,10 @@ import { simpleTraverse } from '@typescript-eslint/typescript-estree'
 
 import {
   getDecorators,
-  getDecoratorTypeSize,
+  getSecondDecoratorValue,
   getSpecifiedDecorator,
   getPropertyType,
-  getDecoratorType,
+  getFirstDecoratorValue,
 } from '../utils/ast-utils'
 import {
   SMART_CONTRACT_DEFINITION,
@@ -32,7 +32,7 @@ type SnarkyJSPrimitiveName = typeof SnarkyJSPrimitiveNames[number]
 const isSnarkyJSPrimitive = (p: any): p is SnarkyJSPrimitiveName =>
   SnarkyJSPrimitiveNames.includes(p)
 
-const SnarkyJSPrimitiveInfo = {
+const SnarkyJSPrimitiveSizeInfo = {
   Field: { size: 1 },
   Bool: { size: 1 },
   Scalar: { size: 1 },
@@ -46,8 +46,8 @@ const SnarkyJSPrimitiveInfo = {
 
 type CircuitDecoratorInfo = {
   decoratorType: string
-  kind: 'state' | 'arrayProp' | 'prop'
-  size?: number
+  decoratorKind: 'state' | 'arrayProp' | 'prop'
+  typeSize?: number
   node: TSESTree.Node
 }
 
@@ -66,26 +66,30 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   },
 
   create(context) {
+    // Store SmartContact class name as the key and a list of `CircuitDecoratorInfo` that represents each storage state
     let smartContractMap = new Map<string, CircuitDecoratorInfo[]>()
+
+    // Store CircuitValue class name as the key and a list of `CircuitDecoratorInfo` that represents each storage state
     let circuitValueMap = new Map<string, CircuitDecoratorInfo[]>()
 
     return {
       'Program:exit': function (_) {
-        for (const smartContractStates of smartContractMap.values()) {
+        smartContractMap.forEach((circuitDecorators, _) => {
           let stateCount = 0
-          for (const circuitDecorator of smartContractStates) {
-            // Check if the state decorator is held within a CircuitValue otherwise check if it is a SnarkyJS primitive
+          circuitDecorators.forEach((circuitDecorator) => {
+            // Check if the state decorator is held within a CircuitValue class
+            // otherwise check if it is a SnarkyJS primitive to get it's state size
             if (circuitValueMap.has(circuitDecorator.decoratorType)) {
-              const circuitStates =
-                circuitValueMap.get(circuitDecorator.decoratorType) || []
-              for (let circuitState of circuitStates) {
-                if (circuitState.size) {
-                  stateCount += circuitState.size
-                }
-              }
+              const circuitValueStates =
+                circuitValueMap.get(circuitDecorator.decoratorType) ?? []
+
+              circuitValueStates.forEach((circuitValueState) => {
+                if (circuitValueState.typeSize)
+                  stateCount += circuitValueState.typeSize
+              })
             } else if (isSnarkyJSPrimitive(circuitDecorator.decoratorType)) {
               const stateSize =
-                SnarkyJSPrimitiveInfo[
+                SnarkyJSPrimitiveSizeInfo[
                   circuitDecorator.decoratorType as SnarkyJSPrimitiveName
                 ].size
               stateCount += stateSize
@@ -96,86 +100,88 @@ const rule: TSESLint.RuleModule<string, string[]> = {
                 loc: circuitDecorator.node.loc,
               })
             }
-          }
-        }
-      },
-
-      [SMART_CONTRACT_DEFINITION]: function (smartContractNode: TSESTree.Node) {
-        let parent = smartContractNode.parent as TSESTree.ClassDeclaration
-        if (parent) {
-          let circuitStates = [] as CircuitDecoratorInfo[]
-
-          simpleTraverse(parent, {
-            enter: (node: TSESTree.Node) => {
-              const decorators = getDecorators(node)
-              const stateDecorator = getSpecifiedDecorator(decorators, 'state')
-              if (stateDecorator) {
-                const decoratorType =
-                  getDecoratorType(stateDecorator) || getPropertyType(node)
-                if (decoratorType) {
-                  circuitStates.push({
-                    decoratorType,
-                    kind: 'state',
-                    node,
-                  })
-                }
-              }
-            },
           })
-          if (parent.id?.name)
-            smartContractMap.set(parent.id?.name, circuitStates)
-        }
+        })
       },
 
-      [CIRCUIT_VALUE_DEFINITION]: function (circuitValueNode: TSESTree.Node) {
-        let parent = circuitValueNode.parent as TSESTree.ClassDeclaration
-        if (parent) {
-          let circuitStates = [] as CircuitDecoratorInfo[]
+      [SMART_CONTRACT_DEFINITION]: function (
+        smartContractNode: TSESTree.ClassDeclaration
+      ) {
+        let circuitStates = [] as CircuitDecoratorInfo[]
 
-          simpleTraverse(parent, {
-            enter: (node: TSESTree.Node) => {
-              const decorators = getDecorators(node)
-              const propDecorator = getSpecifiedDecorator(decorators, 'prop')
-              const arrayPropDecorator = getSpecifiedDecorator(
-                decorators,
-                'arrayProp'
-              )
-              if (propDecorator) {
-                const decoratorType =
-                  getDecoratorType(propDecorator) || getPropertyType(node)
-                if (decoratorType) {
-                  const size =
-                    SnarkyJSPrimitiveInfo[
-                      decoratorType as SnarkyJSPrimitiveName
-                    ].size
-                  circuitStates.push({
-                    decoratorType,
-                    kind: 'prop',
+        simpleTraverse(smartContractNode, {
+          enter: (node: TSESTree.Node) => {
+            const decorators = getDecorators(node)
+            const stateDecorator = getSpecifiedDecorator(decorators, 'state')
+            if (stateDecorator) {
+              const decoratorType =
+                getFirstDecoratorValue(stateDecorator) ?? getPropertyType(node)
+              if (decoratorType) {
+                circuitStates.push({
+                  decoratorType,
+                  decoratorKind: 'state',
+                  node,
+                })
+              }
+            }
+          },
+        })
+        if (smartContractNode.id?.name)
+          smartContractMap.set(smartContractNode.id?.name, circuitStates)
+      },
+
+      [CIRCUIT_VALUE_DEFINITION]: function (
+        circuitValueNode: TSESTree.ClassDeclaration
+      ) {
+        let circuitStates = [] as CircuitDecoratorInfo[]
+
+        simpleTraverse(circuitValueNode, {
+          enter: (node: TSESTree.Node) => {
+            const decorators = getDecorators(node)
+            const propDecorator = getSpecifiedDecorator(decorators, 'prop')
+            const arrayPropDecorator = getSpecifiedDecorator(
+              decorators,
+              'arrayProp'
+            )
+            if (propDecorator) {
+              const decoratorType =
+                getFirstDecoratorValue(propDecorator) ?? getPropertyType(node)
+
+              if (decoratorType) {
+                const typeSize =
+                  SnarkyJSPrimitiveSizeInfo[
+                    decoratorType as SnarkyJSPrimitiveName
+                  ].size
+                circuitStates.push({
+                  decoratorType,
+                  decoratorKind: 'prop',
+                  typeSize,
+                  node: circuitValueNode,
+                })
+              }
+            } else if (arrayPropDecorator) {
+              const decoratorType =
+                getFirstDecoratorValue(arrayPropDecorator) ??
+                getPropertyType(node)
+              if (decoratorType) {
+                const size =
+                  SnarkyJSPrimitiveSizeInfo[
+                    decoratorType as SnarkyJSPrimitiveName
+                  ].size
+                circuitStates.push({
+                  decoratorType,
+                  decoratorKind: 'arrayProp',
+                  typeSize:
+                    (getSecondDecoratorValue(arrayPropDecorator) as number)! *
                     size,
-                    node: parent,
-                  })
-                }
-              } else if (arrayPropDecorator) {
-                const decoratorType =
-                  getDecoratorType(arrayPropDecorator) || getPropertyType(node)
-                if (decoratorType) {
-                  const size =
-                    SnarkyJSPrimitiveInfo[
-                      decoratorType as SnarkyJSPrimitiveName
-                    ].size
-                  circuitStates.push({
-                    decoratorType,
-                    kind: 'arrayProp',
-                    size: getDecoratorTypeSize(arrayPropDecorator)! * size,
-                    node: parent,
-                  })
-                }
+                  node: circuitValueNode,
+                })
               }
-            },
-          })
-          if (parent.id?.name)
-            circuitValueMap.set(parent.id?.name, circuitStates)
-        }
+            }
+          },
+        })
+        if (circuitValueNode.id?.name)
+          circuitValueMap.set(circuitValueNode.id?.name, circuitStates)
       },
     }
   },
