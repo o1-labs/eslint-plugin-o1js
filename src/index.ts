@@ -8,6 +8,7 @@ const snarkyJSRules: string[] = [
   'no-json-functions-in-circuit',
   'no-random-in-circuit',
   'no-constructor-in-smart-contract',
+  'always-export-in-smart-contract',
 ]
 
 const snarkyJSRuleModules: { [key: string]: any } = {}
