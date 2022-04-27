@@ -1,0 +1,36 @@
+#
+# ci.yml
+#
+# Run tests for all pushed commits and opened pull requests on Github.
+#
+
+name: CI
+on: [push, pull_request]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node: [14, 16]
+    steps:
+      - name: Set up NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: NPM ci, build, & test
+        run: |
+          npm ci
+          npm run build
+          npm run test
+        env:
+          CI: true
+      - name: Publish to NPM if version has changed
+        uses: JS-DevTools/npm-publish@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+        env:
+          INPUT_TOKEN: ${{ secrets.NPM_TOKEN }}
