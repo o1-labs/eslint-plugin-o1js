@@ -40,7 +40,7 @@ export function getDecorators(node: TSESTree.Node): TSESTree.Decorator[] {
  * @returns An object indicating what decorator was used and the node
  */
 export function getValidDecorator(node: TSESTree.Node) {
-  let decorators = getDecorators(node)
+  const decorators = getDecorators(node)
   for (const decorator of decorators) {
     if (isIdentifier(decorator.expression)) {
       const decoratorName = decorator.expression.name
@@ -178,7 +178,7 @@ export function getClassName(node: TSESTree.Node) {
  * @param bannedFunctions A set of banned functions
  * @returns True if the `CallExpression` calls on a banned import or function or false
  */
-export let isBannedCallExpression = (
+export const isBannedCallExpression = (
   node: TSESTree.CallExpression,
   bannedImports: Set<string>,
   bannedFunctions: Set<string>

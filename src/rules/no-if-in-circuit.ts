@@ -24,19 +24,19 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   },
 
   create(context) {
-    let snarkyCircuitMap = new Map<string, TSESTree.Node>()
-    let ifSet = new Set<string>()
-    let callees: Record<string, string[]> = {}
-    let callStack: (string | undefined)[] = []
-    let currentFunction = () => callStack[callStack.length - 1]
+    const snarkyCircuitMap = new Map<string, TSESTree.Node>()
+    const ifSet = new Set<string>()
+    const callees: Record<string, string[]> = {}
+    const callStack: (string | undefined)[] = []
+    const currentFunction = () => callStack[callStack.length - 1]
 
     function callsIf(functionName: string) {
       return ifSet.has(functionName) || !!callees[functionName]?.some(callsIf)
     }
 
     return {
-      'Program:exit': function (_node) {
-        for (let circuitNode of snarkyCircuitMap.values()) {
+      'Program:exit': function () {
+        for (const circuitNode of snarkyCircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
               if (isIfStatement(node)) {
@@ -73,14 +73,14 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       },
 
       IfStatement() {
-        let functionName = currentFunction()
+        const functionName = currentFunction()
         if (functionName) ifSet.add(functionName)
       },
 
       CallExpression(node: TSESTree.CallExpression) {
-        let functionName = currentFunction()
+        const functionName = currentFunction()
         if (functionName && isIdentifier(node.callee)) {
-          let currentCallees =
+          const currentCallees =
             callees[functionName] || (callees[functionName] = [])
           currentCallees.push(node.callee.name)
         }

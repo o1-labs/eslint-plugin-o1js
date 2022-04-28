@@ -63,6 +63,16 @@ ruleTester.run('no-greater-storage-limit-in-circuit', rule, {
     {
       code: `
       class A extends CircuitValue {
+        @prop prop1: Field;
+        @arrayProp(Field, 8) prop2: Field[];
+      }
+      class B extends CircuitValue {
+        @prop a: A;
+      }`,
+    },
+    {
+      code: `
+      class A extends CircuitValue {
         @arrayProp(PublicKey, 4) arrayProp1 = State<PublicKey[]>();
       }
       class B extends SmartContract {

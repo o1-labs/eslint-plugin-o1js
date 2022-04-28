@@ -35,9 +35,9 @@ interface KnownStateInfo {
 type StateInfo = UnknownStateInfo | KnownStateInfo
 
 // A map containing all Smart Contracts that we can immediately derive state count from
-let knownContractState = new Map<string, KnownStateInfo[]>()
+const knownContractState = new Map<string, KnownStateInfo[]>()
 // A map containing all Smart Contracts that need their state to be derived from other Smart Contracts
-let unknownContractState = new Map<string, StateInfo[]>()
+const unknownContractState = new Map<string, StateInfo[]>()
 
 const rule: TSESLint.RuleModule<string, string[]> = {
   meta: {
@@ -55,13 +55,12 @@ const rule: TSESLint.RuleModule<string, string[]> = {
 
   create(context) {
     return {
-      'Program:exit': function (_) {
+      'Program:exit': function () {
         let derivedUnknownState = true
         // Continue to derive unknown states if we can succesfully derive a previous unknown state.
         while (derivedUnknownState) {
           derivedUnknownState = false // Assume we can't derive an unknown state to break out of the while
-          for (let [className, stateInfo] of unknownContractState) {
-            // Reassign `stateInfo` to an updated version that has it's `UnknownStateInfo` values transformed into `KnownStateInfo` values
+          unknownContractState.forEach((stateInfo, className) => {
             stateInfo = stateInfo.map((state) => {
               if (state.kind === 'UnknownStateInfo') {
                 const { dependsOn, type, node } = state
@@ -82,19 +81,18 @@ const rule: TSESLint.RuleModule<string, string[]> = {
               return state
             })
 
-            let unknownRemaining = stateInfo.filter((state) => {
+            const unknownRemaining = stateInfo.filter((state) => {
               return state.kind === 'UnknownStateInfo'
             }).length
 
             if (unknownRemaining === 0) {
               unknownContractState.delete(className)
               knownContractState.set(className, stateInfo as KnownStateInfo[])
-              break
             }
-          }
+          })
         }
 
-        for (let [_, contractState] of knownContractState) {
+        for (const [, contractState] of knownContractState) {
           const stateDecoratorNode = getStateDecoratorNode(contractState)
           const contractStateCount = calculateContractState(contractState)
           if (stateDecoratorNode && contractStateCount > MAX_CONTRACT_STATES) {
@@ -140,11 +138,11 @@ function getStateDecoratorNode(stateInfo: KnownStateInfo[]) {
 function findKnownAndUnknownStates(
   smartContractNode: TSESTree.ClassDeclaration
 ) {
-  let stateInfo: StateInfo[] = []
-  let classBody = getClassBodyStatements(smartContractNode) ?? []
+  const stateInfo: StateInfo[] = []
+  const classBody = getClassBodyStatements(smartContractNode) ?? []
   let isAllPrimitiveState = true
 
-  for (let classStatement of classBody) {
+  for (const classStatement of classBody) {
     // Get the kind of decorator (`prop`, `state` or `arrayProp`) as well as the TS decorator node
     const decorator = getValidDecorator(classStatement)
 
@@ -187,9 +185,8 @@ function findKnownAndUnknownStates(
         })
       }
     } else if (decorator.kind === 'arrayProp') {
-      const arrayPropLength = (getSecondDecoratorValue(
-        decorator.decorator
-      ) as number)!
+      const arrayPropLength =
+        (getSecondDecoratorValue(decorator.decorator) as number) ?? 0
       if (primitive) {
         const { size } = SnarkyJSPrimitiveSizeInfo[primitive]
         stateInfo.push({
