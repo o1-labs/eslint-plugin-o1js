@@ -155,22 +155,6 @@ export function getFunctionName(node: TSESTree.Node) {
 }
 
 /**
- */
-export function getClassBodyStatements(node: TSESTree.Node) {
-  if (isClassDeclaration(node)) {
-    return node.body.body
-  }
-  return undefined
-}
-
-export function getClassName(node: TSESTree.Node) {
-  if (isClassDeclaration(node)) {
-    return node.id?.name
-  }
-  return undefined
-}
-
-/**
  * Checks to see if the specified `CallExpression` node uses a banned import or calls upon
  * a banned function.
  * @param node The specified `CallExpression` node
@@ -178,11 +162,11 @@ export function getClassName(node: TSESTree.Node) {
  * @param bannedFunctions A set of banned functions
  * @returns True if the `CallExpression` calls on a banned import or function or false
  */
-export const isBannedCallExpression = (
+export function isBannedCallExpression(
   node: TSESTree.CallExpression,
   bannedImports: Set<string>,
   bannedFunctions: Set<string>
-) => {
+) {
   if (isMemberExpression(node.callee)) {
     if (
       isIdentifier(node.callee.property) &&
@@ -199,4 +183,18 @@ export const isBannedCallExpression = (
     return true
   }
   return false
+}
+
+export function getClassBodyStatements(node: TSESTree.Node) {
+  if (isClassDeclaration(node)) {
+    return node.body.body
+  }
+  return undefined
+}
+
+export function getClassName(node: TSESTree.Node) {
+  if (isClassDeclaration(node)) {
+    return node.id?.name
+  }
+  return undefined
 }
