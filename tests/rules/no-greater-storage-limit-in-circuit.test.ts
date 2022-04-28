@@ -99,8 +99,11 @@ ruleTester.run('no-greater-storage-limit-in-circuit', rule, {
         @prop prop1: Field;
         @prop prop2: Field;
       }
-      class A extends CircuitValue {
+      class B extends CircuitValue {
         @arrayProp(C, 5) values: C[];
+      }
+      class A extends SmartContract {
+        @state(B) state = State<B>();
       }`,
       errors: [{ messageId }],
     },
@@ -111,51 +114,56 @@ ruleTester.run('no-greater-storage-limit-in-circuit', rule, {
         @prop prop2: Field;
       }
       class B extends CircuitValue {
-        @arrayProp(C, 1) values: C[];
+        @arrayProp(C, 4) values: C[];
         @prop prop2: Field;
       }
-      class A extends CircuitValue {
-        @arrayProp(B, 3) values: C[];
+      class A extends SmartContract{
+        @state(B) state = State<B>();
       }`,
       errors: [{ messageId }],
     },
     {
       code: `
-      class D extends CircuitValue {
+      class E extends CircuitValue {
         @prop prop1: Field;
       }
-      class C extends CircuitValue {
+      class D extends CircuitValue {
         @arrayProp(D, 1) values: D[];
         @prop prop2: Field;
       }
-      class B extends CircuitValue {
+      class C extends CircuitValue {
         @arrayProp(C, 1) values: C[];
         @prop prop2: Field;
       }
-      class A extends CircuitValue {
+      class B extends CircuitValue {
         @arrayProp(B, 3) values: B[];
         @prop prop2: Field;
+      }
+      class A extends SmartContract{
+        @state(B) state = State<B>();
       }`,
       errors: [{ messageId }],
     },
     {
       code: `
-      class A extends CircuitValue {
-        @arrayProp(B, 5) values: B[];
-        @prop prop2: Field;
+      class A extends SmartContract{
+        @state(B) state = State<B>();
       }
       class B extends CircuitValue {
-        @arrayProp(C, 1) values: C[];
+        @arrayProp(B, 3) values: B[];
         @prop prop2: Field;
       }
       class C extends CircuitValue {
-        @arrayProp(D, 1) values: D[];
+        @arrayProp(C, 1) values: C[];
         @prop prop2: Field;
       }
-      class D extends CircuitValue {
+      class E extends CircuitValue {
         @prop prop1: Field;
       }
-      `,
+      class D extends CircuitValue {
+        @arrayProp(D, 1) values: D[];
+        @prop prop2: Field;
+      }`,
       errors: [{ messageId }],
     },
     {
@@ -174,7 +182,7 @@ ruleTester.run('no-greater-storage-limit-in-circuit', rule, {
       class B extends SmartContract {
         @state(A) state1 = State<A>();
       }`,
-      errors: [{ messageId }, { messageId }],
+      errors: [{ messageId }],
     },
     {
       code: `
@@ -185,7 +193,7 @@ ruleTester.run('no-greater-storage-limit-in-circuit', rule, {
       class B extends SmartContract {
         @state(A) state1 = State<A>();
       }`,
-      errors: [{ messageId }, { messageId }],
+      errors: [{ messageId }],
     },
     {
       code: `
@@ -206,7 +214,7 @@ ruleTester.run('no-greater-storage-limit-in-circuit', rule, {
       class B extends SmartContract {
         @state(A) state1 = State<A>();
       }`,
-      errors: [{ messageId }, { messageId }],
+      errors: [{ messageId }],
     },
   ],
 })

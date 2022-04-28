@@ -61,13 +61,14 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         while (derivedUnknownState) {
           derivedUnknownState = false // Assume we can't derive an unknown state to break out of the while
           for (let [className, stateInfo] of unknownContractState) {
+            // Reassign `stateInfo` to an updated version that has it's `UnknownStateInfo` values transformed into `KnownStateInfo` values
             stateInfo = stateInfo.map((state) => {
               if (state.kind === 'UnknownStateInfo') {
                 const { dependsOn, type, node } = state
                 const contractState = knownContractState.get(dependsOn) ?? []
                 const contractStateCount = calculateContractState(contractState)
 
-                // Succesfully derived an unknown state, continue looping as before
+                // Succesfully derived an unknown state, continue looping in the parent while loop
                 if (contractStateCount > 0) {
                   derivedUnknownState = true
                   return {
@@ -94,11 +95,12 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         }
 
         for (let [_, contractState] of knownContractState) {
+          const stateDecoratorNode = getStateDecoratorNode(contractState)
           const contractStateCount = calculateContractState(contractState)
-          if (contractStateCount > MAX_CONTRACT_STATES) {
+          if (stateDecoratorNode && contractStateCount > MAX_CONTRACT_STATES) {
             context.report({
               messageId: `noGreaterStorageLimitInCircuit`,
-              loc: contractState[0].node.loc,
+              loc: stateDecoratorNode.node.loc,
             })
           }
         }
@@ -127,6 +129,12 @@ function calculateContractState(contractState: KnownStateInfo[]) {
       return acc + state.size
     }
   }, 0)
+}
+
+function getStateDecoratorNode(stateInfo: KnownStateInfo[]) {
+  return stateInfo.find((state) => {
+    return state.type.kind === 'state'
+  })
 }
 
 function findKnownAndUnknownStates(
