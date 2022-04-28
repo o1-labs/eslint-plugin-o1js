@@ -30,6 +30,7 @@ interface KnownStateInfo {
   type: ContractTypeKind
   size: number
   node: TSESTree.Node
+  reported: boolean
 }
 
 type StateInfo = UnknownStateInfo | KnownStateInfo
@@ -42,12 +43,12 @@ const unknownContractState = new Map<string, StateInfo[]>()
 const rule: TSESLint.RuleModule<string, string[]> = {
   meta: {
     messages: {
-      noGreaterStorageLimitInCircuit: `A circuit can only have ${MAX_CONTRACT_STATES} allowed storage fields.`,
+      noGreaterStorageLimitInCircuit: `A Smart Contract can only have ${MAX_CONTRACT_STATES} allowed storage fields.`,
     },
     schema: [],
     type: 'problem',
     docs: {
-      description: `A circuit can only have ${MAX_CONTRACT_STATES} allowed storage fields.`,
+      description: `A Smart Contract can only have ${MAX_CONTRACT_STATES} allowed storage fields.`,
       recommended: 'error',
       url: '',
     },
@@ -93,13 +94,16 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         }
 
         for (const [, contractState] of knownContractState) {
-          const stateDecoratorNode = getStateDecoratorNode(contractState)
+          const stateDecoratorInfo = getStateDecoratorInfo(contractState)
           const contractStateCount = calculateContractState(contractState)
-          if (stateDecoratorNode && contractStateCount > MAX_CONTRACT_STATES) {
-            context.report({
-              messageId: `noGreaterStorageLimitInCircuit`,
-              loc: stateDecoratorNode.node.loc,
-            })
+          if (stateDecoratorInfo && !stateDecoratorInfo.reported) {
+            if (contractStateCount > MAX_CONTRACT_STATES) {
+              context.report({
+                messageId: `noGreaterStorageLimitInCircuit`,
+                loc: stateDecoratorInfo.node.loc,
+              })
+              stateDecoratorInfo.reported = true // Set reported to true to avoid reporting same error in multiple files
+            }
           }
         }
       },
@@ -129,7 +133,7 @@ function calculateContractState(contractState: KnownStateInfo[]) {
   }, 0)
 }
 
-function getStateDecoratorNode(stateInfo: KnownStateInfo[]) {
+function getStateDecoratorInfo(stateInfo: KnownStateInfo[]) {
   return stateInfo.find((state) => {
     return state.type.kind === 'state'
   })
@@ -172,6 +176,7 @@ function findKnownAndUnknownStates(
           kind: 'KnownStateInfo',
           type: { kind: decorator.kind },
           node: smartContractNode,
+          reported: false,
           size,
         })
       } else {
@@ -196,6 +201,7 @@ function findKnownAndUnknownStates(
             arrayPropLength,
           },
           node: smartContractNode,
+          reported: false,
           size,
         })
       } else {
