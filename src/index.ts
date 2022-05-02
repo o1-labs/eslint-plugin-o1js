@@ -10,6 +10,7 @@ const snarkyJSRules: string[] = [
   'no-constructor-in-smart-contract',
 ]
 
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
 const snarkyJSRuleModules: { [key: string]: any } = {}
 
 const configs: { recommended: TSESLint.Linter.Config } = {
@@ -23,8 +24,10 @@ snarkyJSRules.forEach((rule) => {
       docs: { recommended },
     },
   } = snarkyJSRuleModules[rule]
-  configs.recommended.rules![`snarkyjs/${rule}`] =
-    recommended === false ? 'off' : recommended
+  if (configs.recommended.rules) {
+    configs.recommended.rules[`snarkyjs/${rule}`] =
+      recommended === false ? 'off' : recommended
+  }
 })
 
 export { snarkyJSRuleModules as rules, configs }

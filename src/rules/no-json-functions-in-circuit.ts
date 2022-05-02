@@ -22,11 +22,11 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   create(context) {
     const bannedImports = new Set<string>(['JSON'])
     const bannedFunctions = new Set<string>(['stringify', 'parse'])
-    let snarkyCircuitMap = new Map<string, TSESTree.Node>()
-    let jsonSet = new Set<string>()
-    let callees: Record<string, string[]> = {}
-    let callStack: (string | undefined)[] = []
-    let currentFunction = () => callStack[callStack.length - 1]
+    const snarkyCircuitMap = new Map<string, TSESTree.Node>()
+    const jsonSet = new Set<string>()
+    const callees: Record<string, string[]> = {}
+    const callStack: (string | undefined)[] = []
+    const currentFunction = () => callStack[callStack.length - 1]
 
     function callsJSON(functionName: string) {
       return (
@@ -35,8 +35,8 @@ const rule: TSESLint.RuleModule<string, string[]> = {
     }
 
     return {
-      'Program:exit': function (_) {
-        for (let circuitNode of snarkyCircuitMap.values()) {
+      'Program:exit': function () {
+        for (const circuitNode of snarkyCircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
               if (
@@ -79,7 +79,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       },
 
       CallExpression(node: TSESTree.CallExpression) {
-        let functionName = currentFunction()
+        const functionName = currentFunction()
         if (
           functionName &&
           isBannedCallExpression(node, bannedImports, bannedFunctions)
@@ -87,7 +87,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
           jsonSet.add(functionName)
         }
         if (functionName && isIdentifier(node.callee)) {
-          let currentCallees =
+          const currentCallees =
             callees[functionName] || (callees[functionName] = [])
           currentCallees.push(node.callee.name)
         }

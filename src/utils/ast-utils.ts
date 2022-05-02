@@ -1,4 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/experimental-utils'
+import type { ContractStateType } from '../types'
+import { findValidContractType } from '../types'
 import {
   isIdentifier,
   isLiteral,
@@ -12,12 +14,13 @@ import {
   isTSTypeReference,
   isTSArrayType,
   isMemberExpression,
+  isClassDeclaration,
 } from './node-utils'
 
 /**
- * Returns all decorators of a node if they exist, otherwise returns an empty list.
- * @param  node Node to get decorators from
- * @returns A list of decorators or an empty list
+ * Get a list of all decorators on a node.
+ * @param node Node to get decorators from
+ * @returns A list of decorators. Returns an empty list if none are found.
  */
 export function getDecorators(node: TSESTree.Node): TSESTree.Decorator[] {
   if (
@@ -30,28 +33,39 @@ export function getDecorators(node: TSESTree.Node): TSESTree.Decorator[] {
 }
 
 /**
- * For a given list of decorators, find a decorator by name. Returns `undefined` if not found.
- * @param decorators A list of decorators to search
- * @param decoratorToFind The name of the decorator to find
- * @returns The specified decorator or undefined
+ * Return an object that contains what kind of SnarkyJS decorator was used
+ * (e.g `@state` `@prop`, or `@arrayProp`)
+ * and the decorator node.
+ * @param node The node to get the decorators from
+ * @returns An object indicating what decorator was used and the node
  */
-export function getSpecifiedDecorator(
-  decorators: TSESTree.Decorator[],
-  decoratorToFind: string
-) {
-  return decorators.find((decorator) => {
-    // Check if we hit a decorator with no call expression (e.g. `@prop`)
+export function getValidDecorator(node: TSESTree.Node) {
+  const decorators = getDecorators(node)
+  for (const decorator of decorators) {
     if (isIdentifier(decorator.expression)) {
-      return decorator.expression.name === decoratorToFind
-    }
-    // Check if we hit a decorator with a call expression (e.g. `@state(T)`)
-    else if (
+      const decoratorName = decorator.expression.name
+      const validDecorator = findValidContractType(decoratorName)
+      if (validDecorator) {
+        return {
+          kind: validDecorator as ContractStateType,
+          decorator,
+        }
+      }
+    } else if (
       isCallExpression(decorator.expression) &&
       isIdentifier(decorator.expression.callee)
     ) {
-      return decorator.expression.callee.name === decoratorToFind
-    } else return false
-  })
+      const decoratorName = decorator.expression.callee.name
+      const validDecorator = findValidContractType(decoratorName)
+      if (validDecorator) {
+        return {
+          kind: validDecorator as ContractStateType,
+          decorator,
+        }
+      }
+    }
+  }
+  return undefined
 }
 
 /**
@@ -148,11 +162,11 @@ export function getFunctionName(node: TSESTree.Node) {
  * @param bannedFunctions A set of banned functions
  * @returns True if the `CallExpression` calls on a banned import or function or false
  */
-export let isBannedCallExpression = (
+export function isBannedCallExpression(
   node: TSESTree.CallExpression,
   bannedImports: Set<string>,
   bannedFunctions: Set<string>
-) => {
+) {
   if (isMemberExpression(node.callee)) {
     if (
       isIdentifier(node.callee.property) &&
@@ -169,4 +183,18 @@ export let isBannedCallExpression = (
     return true
   }
   return false
+}
+
+export function getClassBodyStatements(node: TSESTree.Node) {
+  if (isClassDeclaration(node)) {
+    return node.body.body
+  }
+  return undefined
+}
+
+export function getClassName(node: TSESTree.Node) {
+  if (isClassDeclaration(node)) {
+    return node.id?.name
+  }
+  return undefined
 }

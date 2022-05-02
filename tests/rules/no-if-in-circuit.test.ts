@@ -33,7 +33,7 @@ ruleTester.run('no-if-in-circuit', rule, {
     {
       code: `
       class Foo {
-     	  @method async bar() {
+        @method async bar() {
           if (true) {};
         }
       }`,

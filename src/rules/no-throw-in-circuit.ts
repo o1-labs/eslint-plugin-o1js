@@ -22,11 +22,11 @@ const rule: TSESLint.RuleModule<string, string[]> = {
   },
 
   create(context) {
-    let snarkyCircuitMap = new Map<string, TSESTree.Node>()
-    let throwSet = new Set<string>()
-    let callees: Record<string, string[]> = {}
-    let callStack: (string | undefined)[] = []
-    let currentFunction = () => callStack[callStack.length - 1]
+    const snarkyCircuitMap = new Map<string, TSESTree.Node>()
+    const throwSet = new Set<string>()
+    const callees: Record<string, string[]> = {}
+    const callStack: (string | undefined)[] = []
+    const currentFunction = () => callStack[callStack.length - 1]
 
     function callsThrow(functionName: string) {
       return (
@@ -35,8 +35,8 @@ const rule: TSESLint.RuleModule<string, string[]> = {
     }
 
     return {
-      'Program:exit': function (_) {
-        for (let circuitNode of snarkyCircuitMap.values()) {
+      'Program:exit': function () {
+        for (const circuitNode of snarkyCircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
               if (isThrowStatement(node)) {
@@ -73,14 +73,14 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       },
 
       ThrowStatement() {
-        let functionName = currentFunction()
+        const functionName = currentFunction()
         if (functionName) throwSet.add(functionName)
       },
 
       CallExpression(node: TSESTree.CallExpression) {
-        let functionName = currentFunction()
+        const functionName = currentFunction()
         if (functionName && isIdentifier(node.callee)) {
-          let currentCallees =
+          const currentCallees =
             callees[functionName] || (callees[functionName] = [])
           currentCallees.push(node.callee.name)
         }
