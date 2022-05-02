@@ -97,3 +97,7 @@ export function isTSArrayType(
 ): node is TSESTree.TSArrayType {
   return node !== undefined && node.type === 'TSArrayType'
 }
+
+export function hasExportNamedDeclaration(node: TSESTree.Node) {
+  return node !== undefined && node.type === 'ExportNamedDeclaration'
+}
