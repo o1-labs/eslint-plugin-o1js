@@ -20,6 +20,12 @@ ruleTester.run('always-export-in-smart-contract', rule, {
       class Bar {}
       `,
     },
+    {
+      code: `
+      class Foo extends SmartContract {}
+      class Bar extends SmartContract {}
+      export { Foo, Bar };`,
+    },
   ],
   invalid: [
     {
@@ -42,6 +48,13 @@ ruleTester.run('always-export-in-smart-contract', rule, {
       export class Bar extends SmartContract {}
       export default class Foo extends SmartContract {}
       `,
+      errors: [{ messageId: message }],
+    },
+    {
+      code: `
+      class Foo extends SmartContract {}
+      class Bar extends SmartContract {}
+      export { Foo };`,
       errors: [{ messageId: message }],
     },
   ],
