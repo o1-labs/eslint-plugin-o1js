@@ -33,7 +33,7 @@ export function getDecorators(node: TSESTree.Node): TSESTree.Decorator[] {
 }
 
 /**
- * Return an object that contains what kind of SnarkyJS decorator was used
+ * Return an object that contains what kind of o1js decorator was used
  * (e.g `@state` `@prop`, or `@arrayProp`)
  * and the decorator node.
  * @param node The node to get the decorators from
