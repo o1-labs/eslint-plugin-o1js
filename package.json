@@ -1,5 +1,5 @@
 {
-  "name": "eslint-plugin-o1jx",
+  "name": "eslint-plugin-o1js",
   "version": "0.4.0",
   "description": "o1js rules for ESLint",
   "main": "build/src/index.js",
