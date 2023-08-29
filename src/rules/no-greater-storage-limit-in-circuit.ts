@@ -2,8 +2,8 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/experimental-utils'
 import type { ContractTypeKind } from '../types'
 import {
   MAX_CONTRACT_STATES,
-  getSnarkyJSPrimitive,
-  SnarkyJSPrimitiveSizeInfo,
+  geto1jsPrimitive,
+  o1jsPrimitiveSizeInfo,
 } from '../types'
 import {
   getSecondDecoratorValue,
@@ -155,23 +155,23 @@ function findKnownAndUnknownStates(
     }
 
     // Get the user specified type from the decorator node (e.g `Field`, `Group` or a CircuitValue)
-    const snarkyDecoratorType =
+    const o1DecoratorType =
       getFirstDecoratorValue(decorator.decorator) ??
       getPropertyType(classStatement)
 
-    if (!snarkyDecoratorType) {
+    if (!o1DecoratorType) {
       continue
     }
 
-    // If the decorator type is a SnarkyJS primitive, get it's value
-    const primitive = getSnarkyJSPrimitive(snarkyDecoratorType)
+    // If the decorator type is a o1js primitive, get it's value
+    const primitive = geto1jsPrimitive(o1DecoratorType)
     if (!primitive) {
       isAllPrimitiveState = false
     }
 
     if (decorator.kind === 'prop' || decorator.kind === 'state') {
       if (primitive) {
-        const { size } = SnarkyJSPrimitiveSizeInfo[primitive]
+        const { size } = o1jsPrimitiveSizeInfo[primitive]
         stateInfo.push({
           kind: 'KnownStateInfo',
           type: { kind: decorator.kind },
@@ -186,14 +186,14 @@ function findKnownAndUnknownStates(
             kind: decorator.kind,
           },
           node: smartContractNode,
-          dependsOn: snarkyDecoratorType,
+          dependsOn: o1DecoratorType,
         })
       }
     } else if (decorator.kind === 'arrayProp') {
       const arrayPropLength =
         (getSecondDecoratorValue(decorator.decorator) as number) ?? 0
       if (primitive) {
-        const { size } = SnarkyJSPrimitiveSizeInfo[primitive]
+        const { size } = o1jsPrimitiveSizeInfo[primitive]
         stateInfo.push({
           kind: 'KnownStateInfo',
           type: {
@@ -212,13 +212,13 @@ function findKnownAndUnknownStates(
             arrayPropLength,
           },
           node: smartContractNode,
-          dependsOn: snarkyDecoratorType,
+          dependsOn: o1DecoratorType,
         })
       }
     }
   }
 
-  // If all decorators are a SnarkyJS primitive, we can calculate the Smart Contract state count and
+  // If all decorators are a o1js primitive, we can calculate the Smart Contract state count and
   // insert it into the `knownContractStateMap`. If the user specifies a CircuitValue, we store the state info
   // in `unknownContractState` to derive it's state count later.
   const className = getClassName(smartContractNode) ?? ''

@@ -1,6 +1,6 @@
 export const MAX_CONTRACT_STATES = 8 as const
 
-const SnarkyJSPrimitives = [
+const o1jsPrimitives = [
   'Field',
   'Bool',
   'UInt32',
@@ -12,13 +12,13 @@ const SnarkyJSPrimitives = [
   'Signature',
 ] as const
 
-export type SnarkyJSPrimitive = typeof SnarkyJSPrimitives[number]
+export type o1jsPrimitive = typeof o1jsPrimitives[number]
 
-export function getSnarkyJSPrimitive(s: string) {
-  return SnarkyJSPrimitives.find((primitiveType) => s === primitiveType)
+export function geto1jsPrimitive(s: string) {
+  return o1jsPrimitives.find((primitiveType) => s === primitiveType)
 }
 
-export const SnarkyJSPrimitiveSizeInfo = {
+export const o1jsPrimitiveSizeInfo = {
   Field: { size: 1 },
   Bool: { size: 1 },
   Scalar: { size: 1 },
@@ -28,7 +28,7 @@ export const SnarkyJSPrimitiveSizeInfo = {
   Group: { size: 2 },
   PublicKey: { size: 2 },
   Signature: { size: 2 },
-} as Record<SnarkyJSPrimitive, { size: number }>
+} as Record<o1jsPrimitive, { size: number }>
 
 export type PropKind = {
   kind: 'prop'

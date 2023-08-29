@@ -26,7 +26,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
       'getRandomValues',
       'randomBytes',
     ])
-    const snarkyCircuitMap = new Map<string, TSESTree.Node>()
+    const o1CircuitMap = new Map<string, TSESTree.Node>()
     const randomSet = new Set<string>()
     const callees: Record<string, string[]> = {}
     const callStack: (string | undefined)[] = []
@@ -41,7 +41,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
 
     return {
       'Program:exit': function () {
-        for (const circuitNode of snarkyCircuitMap.values()) {
+        for (const circuitNode of o1CircuitMap.values()) {
           simpleTraverse(circuitNode, {
             enter: (node: TSESTree.Node) => {
               if (
@@ -80,7 +80,7 @@ const rule: TSESLint.RuleModule<string, string[]> = {
         circuitMethodNode: TSESTree.MethodDefinition
       ) {
         const functionName = getFunctionName(circuitMethodNode)
-        if (functionName) snarkyCircuitMap.set(functionName, circuitMethodNode)
+        if (functionName) o1CircuitMap.set(functionName, circuitMethodNode)
       },
 
       CallExpression(node: TSESTree.CallExpression) {
