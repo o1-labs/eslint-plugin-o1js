@@ -1,7 +1,7 @@
 {
-  "name": "eslint-plugin-snarkyjs",
-  "version": "0.3.0",
-  "description": "SnarkyJS rules for ESLint",
+  "name": "eslint-plugin-o1jx",
+  "version": "0.4.0",
+  "description": "o1js rules for ESLint",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "scripts": {
@@ -20,7 +20,8 @@
   ],
   "keywords": [
     "eslint",
-    "snarkyjs"
+    "snarkyjs",
+    "o1js"
   ],
   "devDependencies": {
     "@types/eslint": "^8.2.1",
