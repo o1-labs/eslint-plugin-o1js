@@ -1,6 +1,6 @@
 import type { TSESLint } from '@typescript-eslint/experimental-utils'
 
-const snarkyJSRules: string[] = [
+const o1jsRules: string[] = [
   'no-greater-storage-limit-in-circuit',
   'no-if-in-circuit',
   'no-ternary-in-circuit',
@@ -11,23 +11,23 @@ const snarkyJSRules: string[] = [
 ]
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-const snarkyJSRuleModules: { [key: string]: any } = {}
+const o1jsRuleModules: { [key: string]: any } = {}
 
 const configs: { recommended: TSESLint.Linter.Config } = {
-  recommended: { plugins: ['snarkyjs'], rules: {} },
+  recommended: { plugins: ['o1js'], rules: {} },
 }
 
-snarkyJSRules.forEach((rule) => {
-  snarkyJSRuleModules[rule] = require(`./rules/${rule}`)
+o1jsRules.forEach((rule) => {
+  o1jsRuleModules[rule] = require(`./rules/${rule}`)
   const {
     meta: {
       docs: { recommended },
     },
-  } = snarkyJSRuleModules[rule]
+  } = o1jsRuleModules[rule]
   if (configs.recommended.rules) {
-    configs.recommended.rules[`snarkyjs/${rule}`] =
+    configs.recommended.rules[`o1js/${rule}`] =
       recommended === false ? 'off' : recommended
   }
 })
 
-export { snarkyJSRuleModules as rules, configs }
+export { o1jsRuleModules as rules, configs }

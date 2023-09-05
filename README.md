@@ -1,6 +1,6 @@
-# eslint-plugin-snarkyjs
+# eslint-plugin-o1js
 
-SnarkyJS rules for ESLint to detect bugs and invalid patterns in your Smart Contract code.
+o1js rules for ESLint to detect bugs and invalid patterns in your Smart Contract code.
 
 # Rules
 
@@ -16,17 +16,17 @@ SnarkyJS rules for ESLint to detect bugs and invalid patterns in your Smart Cont
 
 ```
 # npm
-npm install eslint-plugin-snarkyjs --save-dev
+npm install eslint-plugin-o1js --save-dev
 
 # yarn
-yarn add eslint-plugin-snarkyjs --dev
+yarn add eslint-plugin-o1js --dev
 ```
 
-Add `eslint-plugin-snarkyjs` to the `plugins` option in your eslint config:
+Add `eslint-plugin-o1js` to the `plugins` option in your eslint config:
 
 ```
 {
-  "plugins": ["snarkyjs"]
+  "plugins": ["o1js"]
 }
 ```
 
@@ -34,7 +34,7 @@ Add `eslint-plugin-snarkyjs` to the `plugins` option in your eslint config:
 
 ```
 {
-  extends: ['plugin:snarkyjs/recommended'],
+  extends: ['plugin:o1js/recommended'],
 }
 ```
 
@@ -43,8 +43,8 @@ Add `eslint-plugin-snarkyjs` to the `plugins` option in your eslint config:
 ```
 {
   "rules": {
-    "snarkyjs/no-greater-storage-limit-in-circuit": "error",
-    "snarkyjs/no-throw-in-circuit": "error"
+    "o1js/no-greater-storage-limit-in-circuit": "error",
+    "o1js/no-throw-in-circuit": "error"
     ...
   }
 }
@@ -55,8 +55,8 @@ Add `eslint-plugin-snarkyjs` to the `plugins` option in your eslint config:
 ```
 module.exports = {
   parser: '@typescript-eslint/parser',
-  plugins: ['snarkyjs'],
-  extends: ['plugin:snarkyjs/recommended'],
+  plugins: ['o1js'],
+  extends: ['plugin:o1js/recommended'],
 };
 
 ```
